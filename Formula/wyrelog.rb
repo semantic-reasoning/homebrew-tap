@@ -61,27 +61,34 @@ class Wyrelog < Formula
     system "meson", "install", "-C", "build"
 
     # Remove files that conflict with wirelog/nanoarrow/libchronoid formulas
-    # These system packages are already installed via depends_on
-    # Use explicit find command to remove all conflicting files
-    system "find", lib, "-maxdepth", "1", "(",
-           "-name", "*libnanoarrow*", "-o",
-           "-name", "*libwirelog*", "-o",
-           "-name", "*libxxhash*",
-           ")", "-delete"
+    # Use rm directly with explicit paths since other methods don't work reliably
+    conflicting_files = [
+      "libnanoarrow.dylib",
+      "libwirelog.dylib",
+      "libwirelog.1.dylib",
+      "libxxhash.dylib",
+      "libxxhash.0.dylib",
+      "wirelog_cli",
+      "xxhsum",
+    ]
 
-    # Remove conflicting binaries and pkgconfig files explicitly
-    %W[
-      #{bin}/wirelog_cli
-      #{bin}/xxhsum
-      #{lib}/pkgconfig/wirelog.pc
-      #{lib}/pkgconfig/xxhash.pc
-      #{lib}/pkgconfig/libxxhash.pc
-      #{lib}/pkgconfig/nanoarrow.pc
-      #{share}/man/man1/xxhsum.1
-      #{share}/glib-2.0/schemas/gschemas.compiled
-      #{include}/wirelog
-      #{include}/nanoarrow
-    ].each { |f| system "rm", "-rf", f }
+    conflicting_files.each do |f|
+      bin_path = prefix/"bin"/f
+      lib_path = prefix/"lib"/f
+      bin_path.delete if bin_path.exist?
+      lib_path.delete if lib_path.exist?
+    end
+
+    # Remove directories
+    (prefix/"include/wirelog").rmtree if (prefix/"include/wirelog").exist?
+    (prefix/"include/nanoarrow").rmtree if (prefix/"include/nanoarrow").exist?
+
+    # Remove pkgconfig files
+    Dir.glob(prefix/"lib/pkgconfig/{wirelog,nanoarrow,xxhash}*").each { |f| File.delete(f) if File.exist?(f) }
+
+    # Remove other conflicting files
+    File.delete(prefix/"share/man/man1/xxhsum.1") if File.exist?(prefix/"share/man/man1/xxhsum.1")
+    File.delete(prefix/"share/glib-2.0/schemas/gschemas.compiled") if File.exist?(prefix/"share/glib-2.0/schemas/gschemas.compiled")
 
     if OS.mac?
       lib.install buildpath/"subprojects/duckdb-prebuilt-osx-universal/libduckdb.dylib"
