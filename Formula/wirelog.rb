@@ -1,9 +1,9 @@
 class Wirelog < Formula
   desc "Embedded-to-Enterprise Datalog Engine in C11"
   homepage "https://github.com/semantic-reasoning/wirelog"
-  url "https://github.com/semantic-reasoning/wirelog/archive/d2d418344b0ae224944d6bd81a33a37575eaee4f.tar.gz"
-  version "0.39.0"
-  sha256 "176d06d815a438b21160340b4c95883af2fcb6ba80516cd88e2c7a4f134900c4"
+  url "https://github.com/semantic-reasoning/wirelog/archive/refs/tags/v0.40.0.tar.gz"
+  version "0.40.0"
+  sha256 "08ffccf85f2681e19bae733e70c6b1a2fa3659376ca6a1752a07156d996fe30c"
   license "LGPL-3.0-or-later"
   head "https://github.com/semantic-reasoning/wirelog.git", branch: "main"
 
