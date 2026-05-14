@@ -20,6 +20,8 @@ class Wyrelog < Formula
 
   uses_from_macos "zlib"
 
+  conflicts_with "wirelog", because: "both install conflicting library files"
+
   on_macos do
     resource "duckdb-osx-universal" do
       url "https://github.com/duckdb/duckdb/releases/download/v1.5.2/libduckdb-osx-universal.zip"
@@ -90,6 +92,11 @@ class Wyrelog < Formula
       This formula builds the client, audit sink, and fact-store support. For a
       local development daemon, create a policy key and run wyrelogd with an
       explicit policy DB, audit DB, and fact root under #{var}.
+
+      Note: wyrelog conflicts with wirelog formula due to shared library files.
+      If you have wirelog installed, you may need to run:
+        brew unlink wirelog
+        brew link wyrelog
     EOS
   end
 
