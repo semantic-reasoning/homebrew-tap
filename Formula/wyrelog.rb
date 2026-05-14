@@ -59,18 +59,22 @@ class Wyrelog < Formula
     system "meson", "compile", "-C", "build"
     system "meson", "install", "-C", "build"
 
-    # Remove wirelog and libchronoid files (provided by dependencies)
-    manifest = buildpath/"build/install_manifest.txt"
-    if manifest.exist?
-      manifest.read.lines.each do |file|
-        path = Pathname.new(file.chomp)
-        next unless path.exist?
-        # Remove files from wirelog and libchronoid
-        if path.to_s.include?("wirelog") || path.to_s.include?("nanoarrow") || path.to_s.include?("xxhash") || path.to_s.include?("chronoid")
-          path.unlink
-        end
-      end
-    end
+    # Remove bundled binaries and headers that conflict with wirelog/nanoarrow formulas
+    # Keep bundled libraries since wyrelog depends on them internally
+    rm_f [
+      bin/"wirelog_cli",
+      bin/"xxhsum",
+      lib/"pkgconfig/wirelog.pc",
+      lib/"pkgconfig/xxhash.pc",
+      lib/"pkgconfig/libxxhash.pc",
+      lib/"pkgconfig/nanoarrow.pc",
+      share/"man/man1/xxhsum.1",
+      share/"glib-2.0/schemas/gschemas.compiled",
+    ]
+    rm_rf [
+      include/"wirelog",
+      include/"nanoarrow",
+    ]
 
     if OS.mac?
       lib.install buildpath/"subprojects/duckdb-prebuilt-osx-universal/libduckdb.dylib"
