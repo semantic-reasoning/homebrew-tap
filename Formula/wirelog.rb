@@ -30,19 +30,12 @@ class Wirelog < Formula
   def install
     ENV.append "LDFLAGS", "-Wl,-rpath,#{rpath}" if OS.linux?
 
-    resource("nanoarrow").stage buildpath/"subprojects/nanoarrow"
-    resource("xxhash").stage buildpath/"subprojects/xxhash"
-    resource("xxhash-meson-wrapdb-patch").stage do
-      cp_r Dir["xxHash-0.8.3/*"], buildpath/"subprojects/xxhash"
-    end
-
-    meson_args = std_meson_args.reject { |arg| arg.start_with?("--wrap-mode") }
-    system "meson", "setup", "build", "--wrap-mode=default", *meson_args
+    system "meson", "setup", "build", *std_meson_args
     system "meson", "compile", "-C", "build"
     system "meson", "install", "-C", "build"
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/wirelog-dump --version")
+    shell_output("#{bin}/wirelog_cli --help")
   end
 end

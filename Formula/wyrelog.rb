@@ -74,7 +74,6 @@ class Wyrelog < Formula
     end
 
     meson_args = std_meson_args.reject { |arg| arg.start_with?("--wrap-mode") }
-
     system "meson", "setup", "build", "--wrap-mode=default", *meson_args,
            "-Denable_client=enabled",
            "-Denable_audit=enabled",
