@@ -12,6 +12,7 @@ class Wyrelog < Formula
   depends_on "pkgconf" => :build
   depends_on "wirelog"
   depends_on "libchronoid"
+  depends_on "nanoarrow"
   depends_on "glib"
   depends_on "libsodium"
   depends_on "libsoup"
