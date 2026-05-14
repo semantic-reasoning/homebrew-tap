@@ -19,14 +19,18 @@ class Wyrelog < Formula
 
   uses_from_macos "zlib"
 
-  resource "duckdb-linux-amd64" do
-    url "https://github.com/duckdb/duckdb/releases/download/v1.5.2/libduckdb-linux-amd64.zip"
-    sha256 "4711438f0fdb04f0441803409bec5430b763d4f2ac3482c1f97cfa6b5ecb4c15"
+  on_macos do
+    resource "duckdb-osx-universal" do
+      url "https://github.com/duckdb/duckdb/releases/download/v1.5.2/libduckdb-osx-universal.zip"
+      sha256 "524f3537330a1b747556a0c98b62a46865a3f48c7ead2b2035c62f1ad3e5ca8b"
+    end
   end
 
-  resource "duckdb-osx-universal" do
-    url "https://github.com/duckdb/duckdb/releases/download/v1.5.2/libduckdb-osx-universal.zip"
-    sha256 "524f3537330a1b747556a0c98b62a46865a3f48c7ead2b2035c62f1ad3e5ca8b"
+  on_linux do
+    resource "duckdb-linux-amd64" do
+      url "https://github.com/duckdb/duckdb/releases/download/v1.5.2/libduckdb-linux-amd64.zip"
+      sha256 "4711438f0fdb04f0441803409bec5430b763d4f2ac3482c1f97cfa6b5ecb4c15"
+    end
   end
 
   def install
