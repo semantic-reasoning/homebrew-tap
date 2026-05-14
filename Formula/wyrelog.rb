@@ -48,7 +48,7 @@ class Wyrelog < Formula
     end
 
     meson_args = std_meson_args.reject { |arg| arg.start_with?("--wrap-mode") }
-    system "meson", "setup", "build", "--wrap-mode=default", *meson_args,
+    system "meson", "setup", "build", "--wrap-mode=nofallback", *meson_args,
            "-Denable_client=enabled",
            "-Denable_audit=enabled",
            "-Denable_fact_store=enabled",
@@ -59,16 +59,11 @@ class Wyrelog < Formula
     system "meson", "compile", "-C", "build"
     system "meson", "install", "-C", "build"
 
-    # Remove bundled binaries, headers, and libraries that conflict with wirelog/nanoarrow formulas
-    # wirelog formula provides these libraries
+    # Remove bundled binaries and headers that conflict with wirelog/nanoarrow formulas
+    # System packages provide the libraries via pkg-config when using --wrap-mode=nofallback
     rm_f [
       bin/"wirelog_cli",
       bin/"xxhsum",
-      lib/"libnanoarrow.dylib",
-      lib/"libwirelog.dylib",
-      lib/"libwirelog.1.dylib",
-      lib/"libxxhash.dylib",
-      lib/"libxxhash.0.dylib",
       lib/"pkgconfig/wirelog.pc",
       lib/"pkgconfig/xxhash.pc",
       lib/"pkgconfig/libxxhash.pc",
