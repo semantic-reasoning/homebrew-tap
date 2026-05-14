@@ -60,23 +60,25 @@ class Wyrelog < Formula
     system "meson", "compile", "-C", "build"
     system "meson", "install", "-C", "build"
 
-    # Remove bundled binaries, headers, and libraries that conflict with wirelog/nanoarrow formulas
-    # System packages provide these via depends_on
-    system "rm", "-f",
-           bin/"wirelog_cli",
-           bin/"xxhsum",
-           lib/"libnanoarrow.dylib",
-           lib/"libwirelog.dylib",
-           lib/"libwirelog.1.dylib",
-           lib/"libxxhash.dylib",
-           lib/"libxxhash.0.dylib",
-           share/"man/man1/xxhsum.1",
-           share/"glib-2.0/schemas/gschemas.compiled"
-    system "rm", "-rf",
-           include/"wirelog",
-           include/"nanoarrow"
-    system "rm", "-f", "#{lib}/pkgconfig/wirelog.pc", "#{lib}/pkgconfig/xxhash.pc",
-           "#{lib}/pkgconfig/libxxhash.pc", "#{lib}/pkgconfig/nanoarrow.pc"
+    # Remove files that conflict with wirelog/nanoarrow/libchronoid formulas
+    # These system packages are already installed via depends_on
+    manifest = buildpath/"build/install_manifest.txt"
+    if manifest.exist?
+      File.readlines(manifest).each do |file|
+        file = file.strip
+        next if file.empty?
+
+        # Remove conflicting binaries, libraries, headers, and pkgconfig files
+        if file.include?("wirelog_cli") || file.include?("xxhsum") ||
+           file.include?("libnanoarrow") || file.include?("libwirelog") ||
+           file.include?("libxxhash") || file.include?("wirelog.pc") ||
+           file.include?("nanoarrow") || file.include?("xxhash.pc") ||
+           file.include?("gschemas.compiled") || file.include?("xxhsum.1") ||
+           file.end_with?("/wirelog") || file.end_with?("/nanoarrow")
+          rm_f file
+        end
+      end
+    end
 
     if OS.mac?
       lib.install buildpath/"subprojects/duckdb-prebuilt-osx-universal/libduckdb.dylib"
