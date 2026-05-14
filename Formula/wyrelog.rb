@@ -54,6 +54,16 @@ class Wyrelog < Formula
     system "meson", "compile", "-C", "build"
     system "meson", "install", "-C", "build"
 
+    # Remove wirelog and libchronoid files (provided by dependencies)
+    (buildpath/"build/install_manifest.txt").read.lines.each do |file|
+      path = Pathname.new(file.chomp)
+      next unless path.exist?
+      # Remove files from wirelog and libchronoid
+      if path.to_s.include?("wirelog") || path.to_s.include?("nanoarrow") || path.to_s.include?("xxhash") || path.to_s.include?("chronoid")
+        path.unlink
+      end
+    end
+
     if OS.mac?
       lib.install buildpath/"subprojects/duckdb-prebuilt-osx-universal/libduckdb.dylib"
     elsif OS.linux?
