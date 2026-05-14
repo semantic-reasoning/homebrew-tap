@@ -31,12 +31,14 @@ class Wirelog < Formula
     ENV.append "LDFLAGS", "-Wl,-rpath,#{rpath}" if OS.linux?
 
     resource("nanoarrow").stage buildpath/"subprojects/nanoarrow"
-    resource("xxhash").stage buildpath/"subprojects/xxHash-0.8.3"
-    resource("xxhash-meson-wrapdb-patch").stage do
-      cp_r Dir["xxHash-0.8.3/*"], buildpath/"subprojects/xxHash-0.8.3"
+    resource("xxhash").stage buildpath/"subprojects/xxhash-src"
+    resource("xxhash-meson-wrapdb-patch").stage buildpath/"subprojects" do
+      # Patch is already extracted with meson.build; rename directory for wrap compatibility
+      mv "xxHash-0.8.3", "xxhash" if File.exist?("xxHash-0.8.3")
     end
 
-    system "meson", "setup", "build", *std_meson_args
+    meson_args = std_meson_args.reject { |arg| arg.start_with?("--wrap-mode") }
+    system "meson", "setup", "build", "--wrap-mode=default", *meson_args
     system "meson", "compile", "-C", "build"
     system "meson", "install", "-C", "build"
   end
