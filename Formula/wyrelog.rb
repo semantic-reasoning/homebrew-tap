@@ -80,7 +80,8 @@ class Wyrelog < Formula
            "-Dduckdb_source=prebuilt",
            "-Denable_tpm=disabled",
            "-Drequire_tpm=false",
-           "-Dwyrelog_log_max_level=warn"
+           "-Dwyrelog_log_max_level=warn",
+           "-Dwrap_mode=default"
     system "meson", "compile", "-C", "build"
     system "meson", "install", "-C", "build"
 
