@@ -73,7 +73,7 @@ class Wyrelog < Formula
       cp buildpath/"subprojects/packagefiles/duckdb-prebuilt-linux/meson.build", duckdb_dir/"meson.build"
     end
 
-    system "meson", "setup", "build", "--wrap-mode=nodownload", *std_meson_args,
+    system "meson", "setup", "build", *std_meson_args,
            "-Denable_client=enabled",
            "-Denable_audit=enabled",
            "-Denable_fact_store=enabled",

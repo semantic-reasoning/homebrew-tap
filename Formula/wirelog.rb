@@ -36,7 +36,7 @@ class Wirelog < Formula
       cp_r Dir["xxHash-0.8.3/*"], buildpath/"subprojects/xxHash-0.8.3"
     end
 
-    system "meson", "setup", "build", "--wrap-mode=nodownload", *std_meson_args
+    system "meson", "setup", "build", *std_meson_args
     system "meson", "compile", "-C", "build"
     system "meson", "install", "-C", "build"
   end
