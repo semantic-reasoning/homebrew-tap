@@ -73,15 +73,16 @@ class Wyrelog < Formula
       cp buildpath/"subprojects/packagefiles/duckdb-prebuilt-linux/meson.build", duckdb_dir/"meson.build"
     end
 
-    system "meson", "setup", "build", *std_meson_args,
+    meson_args = std_meson_args.reject { |arg| arg.start_with?("--wrap-mode") }
+
+    system "meson", "setup", "build", "--wrap-mode=default", *meson_args,
            "-Denable_client=enabled",
            "-Denable_audit=enabled",
            "-Denable_fact_store=enabled",
            "-Dduckdb_source=prebuilt",
            "-Denable_tpm=disabled",
            "-Drequire_tpm=false",
-           "-Dwyrelog_log_max_level=warn",
-           "-Dwrap_mode=default"
+           "-Dwyrelog_log_max_level=warn"
     system "meson", "compile", "-C", "build"
     system "meson", "install", "-C", "build"
 
