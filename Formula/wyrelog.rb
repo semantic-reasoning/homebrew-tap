@@ -62,23 +62,26 @@ class Wyrelog < Formula
 
     # Remove files that conflict with wirelog/nanoarrow/libchronoid formulas
     # These system packages are already installed via depends_on
-    manifest = buildpath/"build/install_manifest.txt"
-    if manifest.exist?
-      File.readlines(manifest).each do |file|
-        file = file.strip
-        next if file.empty?
+    # Use explicit find command to remove all conflicting files
+    system "find", lib, "-maxdepth", "1", "(",
+           "-name", "*libnanoarrow*", "-o",
+           "-name", "*libwirelog*", "-o",
+           "-name", "*libxxhash*",
+           ")", "-delete"
 
-        # Remove conflicting binaries, libraries, headers, and pkgconfig files
-        if file.include?("wirelog_cli") || file.include?("xxhsum") ||
-           file.include?("libnanoarrow") || file.include?("libwirelog") ||
-           file.include?("libxxhash") || file.include?("wirelog.pc") ||
-           file.include?("nanoarrow") || file.include?("xxhash.pc") ||
-           file.include?("gschemas.compiled") || file.include?("xxhsum.1") ||
-           file.end_with?("/wirelog") || file.end_with?("/nanoarrow")
-          rm_f file
-        end
-      end
-    end
+    # Remove conflicting binaries and pkgconfig files explicitly
+    %W[
+      #{bin}/wirelog_cli
+      #{bin}/xxhsum
+      #{lib}/pkgconfig/wirelog.pc
+      #{lib}/pkgconfig/xxhash.pc
+      #{lib}/pkgconfig/libxxhash.pc
+      #{lib}/pkgconfig/nanoarrow.pc
+      #{share}/man/man1/xxhsum.1
+      #{share}/glib-2.0/schemas/gschemas.compiled
+      #{include}/wirelog
+      #{include}/nanoarrow
+    ].each { |f| system "rm", "-rf", f }
 
     if OS.mac?
       lib.install buildpath/"subprojects/duckdb-prebuilt-osx-universal/libduckdb.dylib"
