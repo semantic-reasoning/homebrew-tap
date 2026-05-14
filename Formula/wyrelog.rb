@@ -10,37 +10,13 @@ class Wyrelog < Formula
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkgconf" => :build
+  depends_on "wirelog"
   depends_on "glib"
   depends_on "libsodium"
   depends_on "libsoup"
   depends_on "sqlite"
 
   uses_from_macos "zlib"
-
-  resource "wirelog" do
-    url "https://github.com/semantic-reasoning/wirelog/archive/d2d418344b0ae224944d6bd81a33a37575eaee4f.tar.gz"
-    sha256 "176d06d815a438b21160340b4c95883af2fcb6ba80516cd88e2c7a4f134900c4"
-  end
-
-  resource "libchronoid" do
-    url "https://github.com/semantic-reasoning/libchronoid/archive/refs/tags/v1.0.1.tar.gz"
-    sha256 "82e3a7748a09898834425c812e5dffb78b7d8e8864118e67ca96e669aee721a9"
-  end
-
-  resource "nanoarrow" do
-    url "https://github.com/apache/arrow-nanoarrow/archive/981775cad8542dee661aec0a9c0441bb2458f8be.tar.gz"
-    sha256 "9af249f8b9bf4f77adea9504de5ca9bb3ceb63488bfbd07fa87040d0c7bc1fea"
-  end
-
-  resource "xxhash" do
-    url "https://github.com/Cyan4973/xxHash/archive/v0.8.3.tar.gz"
-    sha256 "aae608dfe8213dfd05d909a57718ef82f30722c392344583d3f39050c7f29a80"
-  end
-
-  resource "xxhash-meson-wrapdb-patch" do
-    url "https://wrapdb.mesonbuild.com/v2/xxhash_0.8.3-2/get_patch"
-    sha256 "c7f78fc2d08ec21ff1bae928d7bdcddb42713a07d9d973a885c59ea7f8cf6bc8"
-  end
 
   resource "duckdb-linux-amd64" do
     url "https://github.com/duckdb/duckdb/releases/download/v1.5.2/libduckdb-linux-amd64.zip"
@@ -55,14 +31,6 @@ class Wyrelog < Formula
   def install
     ENV.append "LDFLAGS", "-Wl,-rpath,#{rpath}" if OS.linux?
 
-    resource("wirelog").stage buildpath/"subprojects/wirelog"
-    resource("libchronoid").stage buildpath/"subprojects/libchronoid"
-    resource("nanoarrow").stage buildpath/"subprojects/wirelog/subprojects/nanoarrow"
-    resource("xxhash").stage buildpath/"subprojects/wirelog/subprojects/xxHash-0.8.3"
-    resource("xxhash-meson-wrapdb-patch").stage do
-      cp_r Dir["xxHash-0.8.3/*"], buildpath/"subprojects/wirelog/subprojects/xxHash-0.8.3"
-    end
-
     if OS.mac?
       duckdb_dir = buildpath/"subprojects/duckdb-prebuilt-osx-universal"
       resource("duckdb-osx-universal").stage duckdb_dir
@@ -73,8 +41,7 @@ class Wyrelog < Formula
       cp buildpath/"subprojects/packagefiles/duckdb-prebuilt-linux/meson.build", duckdb_dir/"meson.build"
     end
 
-    meson_args = std_meson_args.reject { |arg| arg.start_with?("--wrap-mode") }
-    system "meson", "setup", "build", "--wrap-mode=default", *meson_args,
+    system "meson", "setup", "build", *std_meson_args,
            "-Denable_client=enabled",
            "-Denable_audit=enabled",
            "-Denable_fact_store=enabled",
