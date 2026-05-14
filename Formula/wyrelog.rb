@@ -49,7 +49,7 @@ class Wyrelog < Formula
     end
 
     meson_args = std_meson_args.reject { |arg| arg.start_with?("--wrap-mode") }
-    system "meson", "setup", "build", "--wrap-mode=nofallback", *meson_args,
+    system "meson", "setup", "build", "--wrap-mode=default", *meson_args,
            "-Denable_client=enabled",
            "-Denable_audit=enabled",
            "-Denable_fact_store=enabled",
@@ -61,34 +61,15 @@ class Wyrelog < Formula
     system "meson", "install", "-C", "build"
 
     # Remove files that conflict with wirelog/nanoarrow/libchronoid formulas
-    # Use rm directly with explicit paths since other methods don't work reliably
-    conflicting_files = [
-      "libnanoarrow.dylib",
-      "libwirelog.dylib",
-      "libwirelog.1.dylib",
-      "libxxhash.dylib",
-      "libxxhash.0.dylib",
-      "wirelog_cli",
-      "xxhsum",
-    ]
-
-    conflicting_files.each do |f|
-      bin_path = prefix/"bin"/f
-      lib_path = prefix/"lib"/f
-      bin_path.delete if bin_path.exist?
-      lib_path.delete if lib_path.exist?
-    end
-
-    # Remove directories
-    (prefix/"include/wirelog").rmtree if (prefix/"include/wirelog").exist?
-    (prefix/"include/nanoarrow").rmtree if (prefix/"include/nanoarrow").exist?
-
-    # Remove pkgconfig files
-    Dir.glob(prefix/"lib/pkgconfig/{wirelog,nanoarrow,xxhash}*").each { |f| File.delete(f) if File.exist?(f) }
-
-    # Remove other conflicting files
-    File.delete(prefix/"share/man/man1/xxhsum.1") if File.exist?(prefix/"share/man/man1/xxhsum.1")
-    File.delete(prefix/"share/glib-2.0/schemas/gschemas.compiled") if File.exist?(prefix/"share/glib-2.0/schemas/gschemas.compiled")
+    # Use shell commands for more reliable removal
+    system "bash", "-c", %{
+      rm -f "#{lib}"/{libnanoarrow,libwirelog,libxxhash}*
+      rm -f "#{bin}"/wirelog_cli "#{bin}"/xxhsum
+      rm -rf "#{include}"/wirelog "#{include}"/nanoarrow
+      rm -f "#{lib}/pkgconfig"/{wirelog,xxhash,nanoarrow}*.pc
+      rm -f "#{share}/man/man1/xxhsum.1"
+      rm -f "#{share}/glib-2.0/schemas/gschemas.compiled"
+    }
 
     if OS.mac?
       lib.install buildpath/"subprojects/duckdb-prebuilt-osx-universal/libduckdb.dylib"
