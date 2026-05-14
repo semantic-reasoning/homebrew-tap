@@ -65,15 +65,6 @@ class Wyrelog < Formula
     rm_f [
       bin/"wirelog_cli",
       bin/"xxhsum",
-      lib/"libnanoarrow.dylib",
-      lib/"libwirelog.dylib",
-      lib/"libwirelog.1.dylib",
-      lib/"libxxhash.dylib",
-      lib/"libxxhash.0.dylib",
-      lib/"pkgconfig/wirelog.pc",
-      lib/"pkgconfig/xxhash.pc",
-      lib/"pkgconfig/libxxhash.pc",
-      lib/"pkgconfig/nanoarrow.pc",
       share/"man/man1/xxhsum.1",
       share/"glib-2.0/schemas/gschemas.compiled",
     ]
@@ -81,6 +72,12 @@ class Wyrelog < Formula
       include/"wirelog",
       include/"nanoarrow",
     ]
+
+    # Remove library pkgconfig files
+    Dir.glob(lib/"pkgconfig"/{wirelog,xxhash,nanoarrow}*).each { |f| rm_f f }
+
+    # Remove conflicting library files (wirelog, libchronoid, nanoarrow provide these)
+    Dir.glob(lib/"{libnanoarrow*,libwirelog*,libxxhash*}").each { |f| rm_f f }
 
     if OS.mac?
       lib.install buildpath/"subprojects/duckdb-prebuilt-osx-universal/libduckdb.dylib"
