@@ -35,6 +35,7 @@ class Wyrelog < Formula
 
   def install
     ENV.append "LDFLAGS", "-Wl,-rpath,#{rpath}" if OS.linux?
+    ENV.append "LDFLAGS", "-Wl,-rpath,#{lib}" if OS.mac?
 
     if OS.mac?
       duckdb_dir = buildpath/"subprojects/duckdb-prebuilt-osx-universal"
@@ -59,12 +60,15 @@ class Wyrelog < Formula
     system "meson", "install", "-C", "build"
 
     # Remove wirelog and libchronoid files (provided by dependencies)
-    (buildpath/"build/install_manifest.txt").read.lines.each do |file|
-      path = Pathname.new(file.chomp)
-      next unless path.exist?
-      # Remove files from wirelog and libchronoid
-      if path.to_s.include?("wirelog") || path.to_s.include?("nanoarrow") || path.to_s.include?("xxhash") || path.to_s.include?("chronoid")
-        path.unlink
+    manifest = buildpath/"build/install_manifest.txt"
+    if manifest.exist?
+      manifest.read.lines.each do |file|
+        path = Pathname.new(file.chomp)
+        next unless path.exist?
+        # Remove files from wirelog and libchronoid
+        if path.to_s.include?("wirelog") || path.to_s.include?("nanoarrow") || path.to_s.include?("xxhash") || path.to_s.include?("chronoid")
+          path.unlink
+        end
       end
     end
 
