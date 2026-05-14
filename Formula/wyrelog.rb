@@ -59,11 +59,16 @@ class Wyrelog < Formula
     system "meson", "compile", "-C", "build"
     system "meson", "install", "-C", "build"
 
-    # Remove bundled binaries and headers that conflict with wirelog/nanoarrow formulas
-    # Keep bundled libraries since wyrelog depends on them internally
+    # Remove bundled binaries, headers, and libraries that conflict with wirelog/nanoarrow formulas
+    # wirelog formula provides these libraries
     rm_f [
       bin/"wirelog_cli",
       bin/"xxhsum",
+      lib/"libnanoarrow.dylib",
+      lib/"libwirelog.dylib",
+      lib/"libwirelog.1.dylib",
+      lib/"libxxhash.dylib",
+      lib/"libxxhash.0.dylib",
       lib/"pkgconfig/wirelog.pc",
       lib/"pkgconfig/xxhash.pc",
       lib/"pkgconfig/libxxhash.pc",
