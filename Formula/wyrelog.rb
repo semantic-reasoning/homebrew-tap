@@ -5,30 +5,31 @@ class Wyrelog < Formula
   version "0.1.0"
   sha256 "2e78389d4a1a3c2d77fc06c12bbac97bc1a006115f27f6eebb2c516b6cc6da30"
   license "GPL-3.0-or-later"
+  revision 1
   head "https://github.com/semantic-reasoning/wyrelog.git", branch: "main"
 
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkgconf" => :build
-  depends_on "wirelog"
-  depends_on "libchronoid"
-  depends_on "nanoarrow"
   depends_on "glib"
+  depends_on "libchronoid"
   depends_on "libsodium"
   depends_on "libsoup"
+  depends_on "nanoarrow"
   depends_on "sqlite"
+  depends_on "wirelog"
 
   uses_from_macos "zlib"
 
-  on_macos do
-    resource "duckdb-osx-universal" do
+  resource "duckdb-osx-universal" do
+    on_macos do
       url "https://github.com/duckdb/duckdb/releases/download/v1.5.2/libduckdb-osx-universal.zip"
       sha256 "524f3537330a1b747556a0c98b62a46865a3f48c7ead2b2035c62f1ad3e5ca8b"
     end
   end
 
-  on_linux do
-    resource "duckdb-linux-amd64" do
+  resource "duckdb-linux-amd64" do
+    on_linux do
       url "https://github.com/duckdb/duckdb/releases/download/v1.5.2/libduckdb-linux-amd64.zip"
       sha256 "4711438f0fdb04f0441803409bec5430b763d4f2ac3482c1f97cfa6b5ecb4c15"
     end
