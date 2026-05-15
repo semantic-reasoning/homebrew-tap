@@ -5,6 +5,7 @@ class Wyrelog < Formula
   version "0.1.0"
   sha256 "2e78389d4a1a3c2d77fc06c12bbac97bc1a006115f27f6eebb2c516b6cc6da30"
   license "GPL-3.0-or-later"
+  revision 1
   head "https://github.com/semantic-reasoning/wyrelog.git", branch: "main"
 
   depends_on "meson" => :build
@@ -14,6 +15,7 @@ class Wyrelog < Formula
   depends_on "libchronoid"
   depends_on "libsodium"
   depends_on "libsoup"
+  depends_on "nanoarrow"
   depends_on "sqlite"
   depends_on "wirelog"
 
