@@ -20,8 +20,6 @@ class Wyrelog < Formula
 
   uses_from_macos "zlib"
 
-  conflicts_with "wirelog", because: "both install conflicting library files"
-
   on_macos do
     resource "duckdb-osx-universal" do
       url "https://github.com/duckdb/duckdb/releases/download/v1.5.2/libduckdb-osx-universal.zip"
@@ -40,6 +38,11 @@ class Wyrelog < Formula
     ENV.append "LDFLAGS", "-Wl,-rpath,#{rpath}" if OS.linux?
     ENV.append "LDFLAGS", "-Wl,-rpath,#{lib}" if OS.mac?
 
+    # Add rpath to find system wirelog libraries
+    wirelog_lib = Formula["wirelog"].opt_lib
+    ENV.append "LDFLAGS", "-Wl,-rpath,#{wirelog_lib}" if OS.mac?
+    ENV.append "LDFLAGS", "-Wl,-rpath,#{wirelog_lib}" if OS.linux?
+
     if OS.mac?
       duckdb_dir = buildpath/"subprojects/duckdb-prebuilt-osx-universal"
       resource("duckdb-osx-universal").stage duckdb_dir
@@ -51,7 +54,7 @@ class Wyrelog < Formula
     end
 
     meson_args = std_meson_args.reject { |arg| arg.start_with?("--wrap-mode") }
-    system "meson", "setup", "build", "--wrap-mode=default", *meson_args,
+    system "meson", "setup", "build", "--wrap-mode=nofallback", *meson_args,
            "-Denable_client=enabled",
            "-Denable_audit=enabled",
            "-Denable_fact_store=enabled",
@@ -61,17 +64,6 @@ class Wyrelog < Formula
            "-Dwyrelog_log_max_level=warn"
     system "meson", "compile", "-C", "build"
     system "meson", "install", "-C", "build"
-
-    # Remove files that conflict with wirelog/nanoarrow/libchronoid formulas
-    # Use shell commands for more reliable removal
-    system "bash", "-c", %{
-      rm -f "#{lib}"/{libnanoarrow,libwirelog,libxxhash}*
-      rm -f "#{bin}"/wirelog_cli "#{bin}"/xxhsum
-      rm -rf "#{include}"/wirelog "#{include}"/nanoarrow
-      rm -f "#{lib}/pkgconfig"/{wirelog,xxhash,nanoarrow}*.pc
-      rm -f "#{share}/man/man1/xxhsum.1"
-      rm -f "#{share}/glib-2.0/schemas/gschemas.compiled"
-    }
 
     if OS.mac?
       lib.install buildpath/"subprojects/duckdb-prebuilt-osx-universal/libduckdb.dylib"
@@ -92,11 +84,6 @@ class Wyrelog < Formula
       This formula builds the client, audit sink, and fact-store support. For a
       local development daemon, create a policy key and run wyrelogd with an
       explicit policy DB, audit DB, and fact root under #{var}.
-
-      Note: wyrelog conflicts with wirelog formula due to shared library files.
-      If you have wirelog installed, you may need to run:
-        brew unlink wirelog
-        brew link wyrelog
     EOS
   end
 
