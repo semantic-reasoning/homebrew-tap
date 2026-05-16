@@ -1,0 +1,75 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "libchronoid-*"
+      - "wirelog-*"
+      - "wyrelog-*"
+      - "wiig-*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-tag:
+    name: validate-tag
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract formula and version from tag
+        id: tag-info
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${{ github.ref_name }}"
+
+          if [[ $tag =~ ^([a-z]+)-(.+)$ ]]; then
+            formula="${BASH_REMATCH[1]}"
+            version="${BASH_REMATCH[2]}"
+            echo "formula=$formula" >> "$GITHUB_OUTPUT"
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+          else
+            echo "Invalid tag format: $tag"
+            exit 1
+          fi
+
+      - name: Verify formula file exists
+        shell: bash
+        run: |
+          formula="${{ steps.tag-info.outputs.formula }}"
+          if [[ ! -f "Formula/${formula}.rb" ]]; then
+            echo "Formula/$$formula.rb not found"
+            exit 1
+          fi
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Run tap syntax check
+        run: brew test-bot --only-tap-syntax
+
+      - name: Build and test tagged formula
+        shell: bash
+        run: |
+          set -euo pipefail
+          formula="${{ steps.tag-info.outputs.formula }}"
+          brew install --build-from-source "./Formula/${formula}.rb"
+          brew test "${formula}"
+
+      - name: Test co-installation (if applicable)
+        if: contains(fromJson('["wirelog", "wyrelog"]'), steps.tag-info.outputs.formula)
+        shell: bash
+        run: |
+          set -euo pipefail
+          brew install --build-from-source ./Formula/wirelog.rb
+          brew install --build-from-source ./Formula/wyrelog.rb
+          brew test wirelog && brew test wyrelog
+          brew unlink wirelog && brew link --overwrite wyrelog && brew test wyrelog
