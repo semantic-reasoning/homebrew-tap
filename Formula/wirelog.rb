@@ -2,7 +2,6 @@ class Wirelog < Formula
   desc "Embedded-to-Enterprise Datalog Engine in C11"
   homepage "https://github.com/semantic-reasoning/wirelog"
   url "https://github.com/semantic-reasoning/wirelog/archive/refs/tags/v0.40.0.tar.gz"
-  version "0.40.0"
   sha256 "08ffccf85f2681e19bae733e70c6b1a2fa3659376ca6a1752a07156d996fe30c"
   license "LGPL-3.0-or-later"
   head "https://github.com/semantic-reasoning/wirelog.git", branch: "main"
@@ -10,7 +9,6 @@ class Wirelog < Formula
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkgconf" => :build
-  depends_on "libchronoid"
 
   resource "nanoarrow" do
     url "https://github.com/apache/arrow-nanoarrow/archive/981775cad8542dee661aec0a9c0441bb2458f8be.tar.gz"
@@ -18,7 +16,7 @@ class Wirelog < Formula
   end
 
   resource "xxhash" do
-    url "https://github.com/Cyan4973/xxHash/archive/v0.8.3.tar.gz"
+    url "https://github.com/Cyan4973/xxHash/archive/refs/tags/v0.8.3.tar.gz"
     sha256 "aae608dfe8213dfd05d909a57718ef82f30722c392344583d3f39050c7f29a80"
   end
 
