@@ -1,0 +1,45 @@
+name: head-build
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: head-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  head-build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Build HEAD (advisory)
+        id: build
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          for formula in libchronoid wirelog wyrelog wiig; do
+            brew install --HEAD --build-from-source "./Formula/${formula}.rb"
+          done
+
+      - name: Open issue on failure (advisory)
+        if: steps.build.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="HEAD build failure ($(date -u +%Y-%m-%d))"
+          body=$'Nightly HEAD build failed.\n\n- Run: '"${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"$'\n- Note: HEAD failures are advisory only and do not block releases.'
+          gh issue create --title "$title" --label "head-build-failure" --body "$body" || true
+
