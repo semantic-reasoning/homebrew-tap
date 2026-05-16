@@ -1,0 +1,32 @@
+name: lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Tap syntax check
+        run: brew test-bot --only-tap-syntax
+
+      - name: Lint and audit
+        run: |
+          brew style ./Formula
+          brew audit --strict --tap semantic-reasoning/tap
+          ruby -wc Formula/*.rb
+

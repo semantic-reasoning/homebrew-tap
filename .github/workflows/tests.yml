@@ -1,0 +1,122 @@
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-bot:
+    name: test-bot (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-13]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Resolve testing formulae (including reverse deps)
+        id: formulae
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          base_ref="${{ github.base_ref }}"
+          if [[ -z "${base_ref}" ]]; then
+            base_ref="main"
+          fi
+
+          git fetch --no-tags --depth=1 origin "${base_ref}"
+
+          changed_formulae="$(git diff --name-only "origin/${base_ref}...HEAD" -- 'Formula/*.rb' | sed -E 's|^Formula/||; s|\\.rb$||' | tr '\n' ' ')"
+
+          ruby -ryaml -e '
+            changed = ENV.fetch("CHANGED", "").split.reject(&:empty?).uniq
+            reverse = YAML.load_file("reverse_deps.yml") || {}
+            expanded = changed.flat_map { |f| [f] + Array(reverse[f]) }.uniq
+            puts "changed=#{changed.join(" ")}"
+            puts "expanded=#{expanded.join(" ")}"
+          ' CHANGED="${changed_formulae}" >> "$GITHUB_OUTPUT"
+
+      - name: Run brew test-bot (changed + reverse deps)
+        if: steps.formulae.outputs.expanded != ''
+        run: |
+          brew test-bot \
+            --only-formulae \
+            --testing-formulae="${{ steps.formulae.outputs.expanded }}"
+
+      - name: Run brew test-bot (no formula changes)
+        if: steps.formulae.outputs.expanded == ''
+        run: brew test-bot --only-tap-syntax
+
+  coinstall:
+    name: co-install wirelog + wyrelog (${{ matrix.os }})
+    needs: test-bot
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-13]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Determine whether to run co-install checks
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          base_ref="${{ github.base_ref }}"
+          if [[ -z "${base_ref}" ]]; then
+            base_ref="main"
+          fi
+
+          git fetch --no-tags --depth=1 origin "${base_ref}"
+          if [[ -n "$(git diff --name-only "origin/${base_ref}...HEAD" -- 'Formula/wirelog.rb' 'Formula/wyrelog.rb' 'Formula/libchronoid.rb')" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and test co-installation
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          brew install --build-from-source ./Formula/wirelog.rb
+          brew install --build-from-source ./Formula/wyrelog.rb
+
+          brew test wirelog
+          brew test wyrelog
+
+          brew unlink wirelog
+          brew link --overwrite wyrelog
+          brew test wyrelog
+
+          brew unlink wyrelog
+          brew link --overwrite wirelog
+          brew test wirelog
+
+      - name: Verify universal slices (wyrelog)
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dylib="$(brew --prefix wyrelog)/lib/libduckdb.dylib"
+          test -f "$dylib"
+          lipo -info "$dylib"
