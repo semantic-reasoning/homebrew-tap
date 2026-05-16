@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Homebrew
+        id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
       - name: Cache Homebrew Bundler RubyGems
@@ -79,6 +80,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Homebrew
+        id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
       - name: Cache Homebrew Bundler RubyGems
