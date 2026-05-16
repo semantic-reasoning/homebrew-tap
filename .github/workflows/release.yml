@@ -46,7 +46,7 @@ jobs:
         run: |
           formula="${{ steps.tag-info.outputs.formula }}"
           if [[ ! -f "Formula/${formula}.rb" ]]; then
-            echo "Formula/$$formula.rb not found"
+            echo "Formula/${formula}.rb not found"
             exit 1
           fi
 
@@ -65,7 +65,7 @@ jobs:
           brew test "${formula}"
 
       - name: Test co-installation (if applicable)
-        if: contains(fromJson('["wirelog", "wyrelog"]'), steps.tag-info.outputs.formula)
+        if: contains('wirelog wyrelog', steps.tag-info.outputs.formula)
         shell: bash
         run: |
           set -euo pipefail
